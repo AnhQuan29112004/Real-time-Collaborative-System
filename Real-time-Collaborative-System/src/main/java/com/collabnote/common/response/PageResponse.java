@@ -1,28 +1,15 @@
 package com.collabnote.common.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
+import org.springframework.data.domain.Page;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PageResponse<T> {
-    private List<T> content;
-    private long totalElements;
-    private int totalPages;
-    private boolean hasNext;
+/** Use only when total counts are required; document lists should use CursorPageResponse. */
+public record PageResponse<T>(List<T> content, long totalElements, int totalPages, boolean hasNext) {
+    public PageResponse {
+        content = List.copyOf(content);
+    }
 
-    public static <T> PageResponse<T> of(List<T> content, long totalElements, int totalPages, boolean hasNext) {
-        return PageResponse.<T>builder()
-                .content(content)
-                .totalElements(totalElements)
-                .totalPages(totalPages)
-                .hasNext(hasNext)
-                .build();
+    public static <T> PageResponse<T> from(Page<T> page) {
+        return new PageResponse<>(page.getContent(), page.getTotalElements(), page.getTotalPages(), page.hasNext());
     }
 }

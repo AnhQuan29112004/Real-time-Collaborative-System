@@ -1,47 +1,35 @@
 package com.collabnote.common.util;
 
+import com.collabnote.common.exception.BusinessException;
+import com.collabnote.common.exception.ErrorCode;
+import com.collabnote.common.security.CollabPrincipal;
+import java.util.Optional;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
-public class SecurityUtils {
+public final class SecurityUtils {
+    private SecurityUtils() { }
 
-    private SecurityUtils() {
+    public static Optional<CollabPrincipal> currentPrincipal() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
+        return auth.getPrincipal() instanceof CollabPrincipal principal
+                ? Optional.of(principal) : Optional.empty();
+    }
+
+    public static Long requireCurrentUserId() {
+        return currentPrincipal().map(CollabPrincipal::userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
     }
 
     public static Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserDetails userDetails) {
-            // Assuming the username is the User ID in this case or custom UserDetails stores ID
-            try {
-                return Long.parseLong(userDetails.getUsername());
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        }
-        
-        try {
-            return Long.parseLong(principal.toString());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return currentPrincipal().map(CollabPrincipal::userId).orElse(null);
     }
-    
-    public static String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return null;
-        }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserDetails userDetails) {
-            return userDetails.getUsername(); // if email is used as username
-        }
-        return principal.toString();
+    public static String getCurrentUserEmail() {
+        return currentPrincipal().map(CollabPrincipal::email).orElse(null);
     }
 }

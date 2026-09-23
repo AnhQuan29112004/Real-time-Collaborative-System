@@ -1,28 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/collabnote
-    username: postgres
-    password: password
-    driver-class-name: org.postgresql.Driver
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: collabnote-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/collabnote}
+    username: ${DB_USERNAME:collabnote}
+    password: ${DB_PASSWORD}
 collabnote:
-  security:
-    jwt:
-      secret: "replace_this_with_a_very_long_secure_secret_key_in_production"
-      expiration-ms: 86400000 # 24 hours
+  auth:
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+  web:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
